@@ -4,7 +4,6 @@ const { Sequelize } = require('sequelize')
 const router = express.Router()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const app = require('../server')
 const saltRounds = 10
 const refreshTokens = [] //Will transfer this to database
 
@@ -38,10 +37,10 @@ router.post('/register',async (req,res) => {
             }
           
           //Sinon, nous créons l'utilisateur
-          bcrypt.hash(password, saltRounds, function(err,hash){
+          bcrypt.hash(password, saltRounds, async function(err,hash){
             await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ("+ name +","+ email +","+ hash +")")
                   .then(([results,metadata]) =>{
-                      res.status(200).json(results)
+                      res.status(200).json({results:results})
                   })
           })
          
@@ -71,7 +70,7 @@ router.post('/login',async (req,res) => {
                 const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, role:results[0].role}
                
                 /** Authentification avec JWT */
-               const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m'})
+               const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
                const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
                refreshTokens.push(refreshToken)
                res.json({
@@ -100,7 +99,7 @@ router.post('token', (req,res)=>{
     if (!refreshTokens.includes(refreshToken)) return sendStatus(403)
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err,user)=>{
         if(err) return res.sendStatus(403) //Forbidden
-        const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m'})
+        const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
         res.json({
             message:"Refresh successful",
             accessToken : accessToken, //needed to access resources
