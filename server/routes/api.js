@@ -25,30 +25,30 @@ router.post('/register',async (req,res) => {
     const name = req.body.name
     const email = req.body.email
     const password = req.body.password
+    const salt = await bcrypt.genSalt(saltRounds)
+    const hash = await bcrypt.hash(password,salt)
 
     try{
-        sequelize.authenticate();
+        sequelize.authenticate()
         await sequelize.query("SELECT * FROM user WHERE email LIKE "+email)
-        .then(([results,metadata]) => {
+        .then(async ([results,metadata]) => {
 
-            //Si cet email est déjà utilisé, une erreur survient
-          if(results != null) {
-              res.status(403).json({message:"This user already exists"})
-            }
-          
-          //Sinon, nous créons l'utilisateur
-          bcrypt.hash(password, saltRounds, async function(err,hash){
-            await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ("+ name +","+ email +","+ hash +")")
-                  .then(([results,metadata]) =>{
-                      res.status(200).json({results:results})
-                  })
-          })
-         
-          
+          if(results.length != 0) {
+          //Si cet email est déjà utilisé, une erreur survient
+            res.status(403).json({error:"This user already exists"})
+          }
+          else{
+            //Nous créons l'utilisateur si l'email n'est pas utilise
+            await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ("+ name +","+ email +",'"+ hash +"')")
+              .then(([results,metadata]) =>{
+                  res.status(200).json({message:results})
+              })
+            
+          }
         })
       }
       catch(error){
-        res.status(500).json({message:"Impossible to apply request"})
+        res.status(500).json({message:error})
       }
 })
 
@@ -61,34 +61,33 @@ router.post('/login',async (req,res) => {
     try{
         sequelize.authenticate();
         await sequelize.query("SELECT * FROM user WHERE email LIKE "+email)
-        .then(([results,metadata]) => {
-          if(results==null) {res.status(404).json({message:"Password or email invalid email"})}
-          
+        .then(async ([results,metadata]) => {
+          //Vérificatio de l'email
+          if(results.length == 0) {res.status(404).json({message:"Password or email invalid email"})}
+          //res.json(results)
           //Vérification du mot de passe
-          bcrypt.compare(password,results[0].password, function(err,res){
-              if(res){
-                const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, role:results[0].role}
-               
-                /** Authentification avec JWT */
-               const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
-               const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
-               refreshTokens.push(refreshToken)
-               res.json({
-                    message:"Login successful",
-                    accessToken : accessToken, //needed to access resources
-                    refreshToken : refreshToken, //needed to refresh accessToken
-                    user: user
-               })
-              }
-              else {
-                res.status(404).json({message:"Password or email invalid password", success:0})
-
-              }
-          })
+          let compare = await bcrypt.compare(password,results[0].password)
+          if(compare){
+            const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
+           
+            /** Authentification avec JWT */
+           const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
+           const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
+           refreshTokens.push(refreshToken)
+           res.status(200).json({
+                message:"Login successful",
+                accessToken : accessToken, //needed to access resources
+                refreshToken : refreshToken, //needed to refresh accessToken
+                user: user
+           })
+          }
+          else {
+            res.status(403).json({message:"Password or email invalid password", success:0})
+          }        
         })
       }
       catch(error){
-        res.status(500).json({message:"Impossible to apply request"})
+        res.status(500).json({message:"error"})
       }
 })
 
