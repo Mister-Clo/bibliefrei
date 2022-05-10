@@ -69,7 +69,7 @@ router.post('/login',async (req,res) => {
           let compare = await bcrypt.compare(password,results[0].password)
           if(compare){
             const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
-           
+            req.session.user = user
             /** Authentification avec JWT */
            const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
            const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
