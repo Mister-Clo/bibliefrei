@@ -69,17 +69,25 @@ router.post('/login',async (req,res) => {
           let compare = await bcrypt.compare(password,results[0].password)
           if(compare){
             const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
-            req.session.user = user
+
             /** Authentification avec JWT */
            const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
            const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
            refreshTokens.push(refreshToken)
-           res.status(200).json({
+
+           req.session.user = {
+             "accessToken": accessToken,
+             "refreshToken": refreshToken,
+             "info": user
+           }
+
+           res.status(200).json(req.session.user)
+           /*res.status(200).json({
                 message:"Login successful",
                 accessToken : accessToken, //needed to access resources
                 refreshToken : refreshToken, //needed to refresh accessToken
                 user: user
-           })
+           })*/
           }
           else {
             res.status(403).json({message:"Password or email invalid password", success:0})

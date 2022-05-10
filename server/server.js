@@ -16,8 +16,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(session({ secret: 'grehjznejzkhgjrez', saveUninitialized: false, resave: false }))
+//locate the dist folder of static files
 app.use(express.static(path.join(__dirname, '../client/dist')))
 
+//locate the home view
 app.get('/', (req,res)=>{
     res.sendFile(path.join(__dirname, '../client/dist/index.html'))
 })
