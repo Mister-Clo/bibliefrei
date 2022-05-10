@@ -26,11 +26,11 @@ router.post('/register',async (req,res) => {
     const email = req.body.email
     const password = req.body.password
     const salt = await bcrypt.genSalt(saltRounds)
-    const hash = await bcrypt.hash(password,salt)
+    const hash = await bcrypt.hash('"'+password+'"',salt)
 
     try{
         sequelize.authenticate()
-        await sequelize.query("SELECT * FROM user WHERE email LIKE "+email)
+        await sequelize.query("SELECT * FROM user WHERE email LIKE '"+email+"'")
         .then(async ([results,metadata]) => {
 
           if(results.length != 0) {
@@ -39,7 +39,7 @@ router.post('/register',async (req,res) => {
           }
           else{
             //Nous créons l'utilisateur si l'email n'est pas utilise
-            await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ("+ name +","+ email +",'"+ hash +"')")
+            await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ('"+ name +"','"+ email +"','"+ hash +"')")
               .then(([results,metadata]) =>{
                   res.status(200).json({message:results})
               })
@@ -55,18 +55,23 @@ router.post('/register',async (req,res) => {
 
 /** Login */
 router.post('/login',async (req,res) => {
-    const email = req.body.email
-    const password = req.body.password
-
+    var email = req.body.email
+    var password = req.body.password
+    console.log(req.body)
+  
+    console.log(email)
+    console.log(password)
     try{
         sequelize.authenticate();
-        await sequelize.query("SELECT * FROM user WHERE email LIKE "+email)
+        
+        await sequelize.query("SELECT * FROM user WHERE email LIKE '"+email+"'")
         .then(async ([results,metadata]) => {
           //Vérificatio de l'email
           if(results.length == 0) {res.status(404).json({message:"Password or email invalid email"})}
           //res.json(results)
           //Vérification du mot de passe
-          let compare = await bcrypt.compare(password,results[0].password)
+          var pwd = '"'+password+'"'
+          let compare = await bcrypt.compare(pwd,results[0].password)
           if(compare){
             const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
 
@@ -95,7 +100,7 @@ router.post('/login',async (req,res) => {
         })
       }
       catch(error){
-        res.status(500).json({message:"error"})
+        res.status(500).json({message:"rendered error"})
       }
 })
 
