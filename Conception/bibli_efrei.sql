@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : lun. 09 mai 2022 à 09:36
+-- Généré le : mer. 11 mai 2022 à 11:28
 -- Version du serveur :  10.4.13-MariaDB
 -- Version de PHP : 7.4.8
 
@@ -53,7 +53,7 @@ CREATE TABLE `panier` (
 --
 
 CREATE TABLE `panier_item` (
-  `id` int(11) NOT NULL,
+  `id_item` int(11) NOT NULL,
   `id_panier` int(11) NOT NULL,
   `id_livre` int(11) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1
@@ -73,6 +73,14 @@ CREATE TABLE `user` (
   `role` tinyint(4) NOT NULL DEFAULT 1,
   `profil` varchar(255) NOT NULL DEFAULT 'Etudiant'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='role = 0 : admin ; = 1 : student';
+
+--
+-- Déchargement des données de la table `user`
+--
+
+INSERT INTO `user` (`id_user`, `name`, `email`, `password`, `role`, `profil`) VALUES
+(3, 'Luffy', 'luffy@mugiwara.com', '$2b$10$sd/LSR54TLpfRRXIPan6u..dArFb3ljIaus6fvHyUCsILd5MEKTte', 1, 'Etudiant'),
+(4, 'Zoro', 'zoro@mugiwara.com', '$2b$10$jNL1qyC2UANBKVrPN7qz.uYWQ9Z0GykrvnPloPRABXZm7Ps3xJ53G', 1, 'Etudiant');
 
 --
 -- Index pour les tables déchargées
@@ -95,7 +103,7 @@ ALTER TABLE `panier`
 -- Index pour la table `panier_item`
 --
 ALTER TABLE `panier_item`
-  ADD PRIMARY KEY (`id`),
+  ADD PRIMARY KEY (`id_item`),
   ADD KEY `FOREIGN_KEY_id_panier` (`id_panier`),
   ADD KEY `FOREIGN_KEY_id_livre` (`id_livre`);
 
@@ -125,13 +133,13 @@ ALTER TABLE `panier`
 -- AUTO_INCREMENT pour la table `panier_item`
 --
 ALTER TABLE `panier_item`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_item` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
