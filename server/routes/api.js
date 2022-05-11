@@ -35,13 +35,13 @@ router.post('/register',async (req,res) => {
 
           if(results.length != 0) {
           //Si cet email est déjà utilisé, une erreur survient
-            res.status(403).json({error:"This user already exists"})
+            res.status(403).json({message:"This user already exists"})
           }
           else{
             //Nous créons l'utilisateur si l'email n'est pas utilise
             await sequelize.query("INSERT INTO `user` (`name`, `email`, `password`) VALUES ('"+ name +"','"+ email +"','"+ hash +"')")
               .then(([results,metadata]) =>{
-                  res.status(200).json({message:results})
+                  res.status(200).json({results:results})
               })
             
           }
