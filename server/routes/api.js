@@ -68,7 +68,7 @@ router.post('/login',async (req,res) => {
         .then(async ([results,metadata]) => {
           //Vérificatio de l'email
           if(results.length == 0) {res.status(404).json({message:"Password or email invalid email"})}
-          //res.json(results)
+
           //Vérification du mot de passe
           var pwd = '"'+password+'"'
           let compare = await bcrypt.compare(pwd,results[0].password)
@@ -76,7 +76,7 @@ router.post('/login',async (req,res) => {
             const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
 
             /** Authentification avec JWT */
-           const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m'})
+           const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
            const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
            refreshTokens.push(refreshToken)
 
@@ -87,12 +87,6 @@ router.post('/login',async (req,res) => {
            }
 
            res.status(200).json(req.session.user)
-           /*res.status(200).json({
-                message:"Login successful",
-                accessToken : accessToken, //needed to access resources
-                refreshToken : refreshToken, //needed to refresh accessToken
-                user: user
-           })*/
           }
           else {
             res.status(403).json({message:"Password or email invalid password", success:0})
@@ -104,8 +98,44 @@ router.post('/login',async (req,res) => {
       }
 })
 
+/** Fetch the Library Books */
+router.get('/books',authenticateToken, async (req,res)=>{
+  try {
+    sequelize.authenticate()
+    await sequelize.query("SELECT * FROM livre")
+          .then(([results,metadata])=>{
+            res.status(200).json(results)
+          })
+  } catch (error) {
+    res.status(500).json({message:"rendered error"})
+  }
+})
+
+/** Add a new Book to the Library*/
+router.post('/books',authenticateToken, async(req,res)=>{
+  const titre = req.body.titre
+  const genre = req.body.genre
+  const quantite = req.body.quantite
+  const image = req.body.image
+  try {
+    sequelize.authenticate()
+    await sequelize.query("INSERT INTO `livre` (`titre`, `genre`, `quantite`, `image`) VALUES ('"+ titre +"','"+ genre +"','"+ quantite +"','"+ image +"')")
+          .then(([results,metadata])=>{
+            res.status(200).json({
+              message : "Ajouté avec succès",
+              livre : {id:results, titre: titre, genre: genre, quantite: quantite, image: image}
+            })
+          })
+    
+  } catch (error) {
+    res.status(500).json({message:"rendered error"})
+
+  }
+})
+
+
 /** Refresh Token */
-router.post('token', (req,res)=>{
+router.post('/token', (req,res)=>{
     const refreshToken = req.body.token
     if (refreshToken == null) return res.sendStatus(401)
     if (!refreshTokens.includes(refreshToken)) return sendStatus(403)
