@@ -5,6 +5,7 @@
         <legend>Ajoutez un livre</legend>
         <input type="text" class="form-control" v-model="titre" placeholder="Titre" required/><br>
         <input type="text" class="form-control" v-model="genre" placeholder="Programmation, BDD..." required/><br>
+        <input type="text" class="form-control" v-model="image" placeholder="Lien de l'image" required/><br>
         <input type="number" min="1" class="form-control" v-model="quantite" required/><br>
         <button type="button" @click.prevent="check()" class="btn btn-dark" id="ajout" >Ajouter</button>
         
@@ -21,6 +22,7 @@ export default {
             //les valeurs par défaut de mes v-model
             titre:"",
             genre:"",
+            image:"",
             quantite:1
         }
     },
@@ -29,7 +31,8 @@ export default {
            const livre = {
              titre : this.titre,
              genre : this.genre,
-             quantite : this.quantite
+             quantite : this.quantite,
+             image: this.image
            }
            
            this.$emit('addBook',livre)

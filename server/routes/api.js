@@ -20,6 +20,11 @@ process.on('unhandledRejection', function(err) {
 });
 
 
+/*********************************************************************
+ *                                                                   *
+ *                 AUTHENTIFICATION                                  *
+ * *******************************************************************/
+
 /** Registration */
 router.post('/register',async (req,res) => {
     const name = req.body.name
@@ -73,10 +78,10 @@ router.post('/login',async (req,res) => {
           var pwd = '"'+password+'"'
           let compare = await bcrypt.compare(pwd,results[0].password)
           if(compare){
-            const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil}
+            const user = {id:results[0].id_user, name:results[0].name, email:results[0].email, profil:results[0].profil, role:results[0].role}
 
             /** Authentification avec JWT */
-           const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+           const accessToken =  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{ expiresIn: '30m'})
            const refreshToken =  jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
            refreshTokens.push(refreshToken)
 
@@ -98,6 +103,133 @@ router.post('/login',async (req,res) => {
       }
 })
 
+
+/** Logout Deconnexion */
+router.delete('/logout/', authenticateToken, async(req,res)=>{
+  
+  req.session.destroy()
+
+  res.status(200).json({message:"Déconnecté(e) avec succès. Merci et à bientôt"})
+
+})
+
+
+/*********************************************************************
+ *                                                                   *
+ *                     PANIER                                        *
+ * *******************************************************************/
+ 
+
+/** Get Panier */
+router.get('/panier',authenticateToken, async(req,res)=>{
+  try {
+    await sequelize.query("SELECT * FROM panier WHERE user_id ='"+req.user.id+"'")
+    .then(async ([results,metadata])=>{
+      if(results.length == 0){
+        await sequelize.query("INSERT INTO `panier` (`user_id`) VALUES ('"+req.user.id+"')")
+            .then(async ([result,metadata])=>{
+              await sequelize.query("SELECT livre.id_livre AS id_livre,livre.titre AS titre,livre.genre AS genre,livre.image AS image,panier.id_panier AS id_panier,quantity,user_id,date_creation "+ 
+              "FROM " +
+              "(panier_item JOIN panier ON panier_item.id_panier=panier.id_panier) JOIN livre ON livre.id_livre = panier_item.id_livre WHERE user_id = '"+req.user.id+"'")
+              .then(([items,metadata])=>{
+                res.status(200).json(items)
+              })
+            })
+      }
+
+      else{
+        await sequelize.query("SELECT livre.id_livre AS id_livre,livre.titre AS titre,livre.genre AS genre,livre.image AS image,panier.id_panier AS id_panier,quantity,user_id,date_creation"+ 
+              " FROM " +
+              "(panier_item JOIN panier ON panier_item.id_panier=panier.id_panier) JOIN livre ON livre.id_livre = panier_item.id_livre WHERE user_id = '"+req.user.id+"'")
+              .then(([items,metadata])=>{
+                res.status(200).json(items)
+              })
+      }
+    })
+    
+  } catch (error) {
+    res.status(500).json({message:error.response.data})
+  }
+
+})
+
+
+/** Add a book in cart */
+router.post('/panier',authenticateToken, async(req,res)=>{
+  const quantite = parseInt(req.body.quantite)
+  const id_livre = req.body.idLivre
+  try {
+    sequelize.authenticate()
+    await sequelize.query("SELECT * FROM panier WHERE user_id ='"+req.user.id+"'")
+          .then(async ([results,metadata])=>{
+          
+          //Le panier est inexistant et vide
+          if(results.length == 0) {
+            await sequelize.query("INSERT INTO `panier` (`user_id`) VALUES ('"+req.user.id+"')")
+                  .then(async ([resul,metadata])=>{
+                     await sequelize.query("INSERT INTO `panier_item` (`id_panier`, `id_livre`, `quantity`) VALUES ('"+resul+"', '"+id_livre+"', '"+quantite+"')")
+                            .then(([results,metadata])=>{
+                              res.status(200).json({message:"Ajouté avec succès", success:resul})
+                            })
+                  })
+          }
+
+          //Le panier existe
+          else{
+            await sequelize.query("SELECT * FROM panier_item WHERE id_livre ='"+id_livre+"'")
+                  .then(async ([items,metadata])=>{
+                    
+                    //Si le livre est déjà dans le panier, on modifie sa quantité
+                    if(items.length != 0){
+                        await sequelize.query("UPDATE `panier_item` SET `quantity` = '"+ items[0].quantity + quantite +"' WHERE `id_item` ='"+items[0].id_item+"'")
+                        .then(([success,metadata])=>{
+                          res.status(200).json({message:"Ajouté avec succès", success:success})
+                        }) 
+                    }
+
+                    //Si le livre n'est pas encore dans le panier on le rajoute
+                    else{
+                      await sequelize.query("INSERT INTO `panier_item` (`id_panier`, `id_livre`, `quantity`) VALUES ('"+results[0].id_panier+"', '"+id_livre+"', '"+quantite+"')")
+                            .then(([results,metadata])=>{
+                              res.status(200).json({message:"Ajouté avec succès", success:results})
+                            })
+                    }
+                  })
+
+            
+          }
+          })
+    
+  } catch (error) {
+    res.status(500).json({message:"rendered error"})
+
+  }
+})
+
+
+/** Delete a Book from the Cart */
+router.delete('/panier/', authenticateToken, async(req,res)=>{
+  const id_livre = parseInt(req.body.idLivre)
+
+  try {
+    sequelize.authenticate()
+    await sequelize.query("DELETE FROM `panier_item` WHERE `id_livre` ='"+id_livre+"'")
+          .then(([results,metadata])=>{
+            res.status(200).json(results)
+          })
+  } catch (error) {
+    res.status(500).json({message:"rendered error"})
+  }
+
+})
+
+
+/*********************************************************************
+ *                                                                   *
+ *                 BIBLIOTHÈQUE                                      *
+ * *******************************************************************/
+
+
 /** Fetch the Library Books */
 router.get('/books',authenticateToken, async (req,res)=>{
   try {
@@ -115,7 +247,7 @@ router.get('/books',authenticateToken, async (req,res)=>{
 router.post('/books',authenticateToken, async(req,res)=>{
   const titre = req.body.titre
   const genre = req.body.genre
-  const quantite = req.body.quantite
+  const quantite = parseInt(req.body.quantite)
   const image = req.body.image
   try {
     sequelize.authenticate()
@@ -132,6 +264,41 @@ router.post('/books',authenticateToken, async(req,res)=>{
 
   }
 })
+
+/** Delete a Book from the library */
+router.delete('/books', authenticateToken, async(req,res)=>{
+    const id_livre = parseInt(req.body.idLivre)
+
+    try {
+      sequelize.authenticate()
+      await sequelize.query("DELETE FROM `livre` WHERE `livre`.`id_livre` ='"+id_livre+"'")
+            .then(([results,metadata])=>{
+              res.status(200).json(results)
+            })
+    } catch (error) {
+      res.status(500).json({message:"rendered error"})
+    }
+
+})
+
+
+/*********************************************************************
+ *                                                                   *
+ *                 JWT AUTHENTIFICATION                              *
+ * *******************************************************************/
+
+/** Middleware to authenticate user with JWT and enable access to resources */
+function authenticateToken(req,res,next){
+  const authHeader = req.headers['authorization']
+  const token =  authHeader && authHeader.split(' ')[1]
+  if (token == null) return res.sendStatus(401) //UnAuthenticated
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,user)=>{
+      if(err) return res.sendStatus(403) //Forbidden
+      req.user = user
+      next()
+  })
+}
 
 
 /** Refresh Token */
@@ -156,18 +323,7 @@ router.delete('/logout',(req,res)=>{
     res.sendStatus(204)
 } )
 
-/** Middleware to authenticate user with JWT and enable access to resources */
-function authenticateToken(req,res,next){
-  const authHeader = req.headers['authorization']
-  const token =  authHeader && authHeader.split(' ')[1]
-  if (token == null) return res.sendStatus(401) //UnAuthenticated
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,user)=>{
-      if(err) return res.sendStatus(403) //Forbidden
-      req.user = user
-      next()
-  })
-}
 
 
 

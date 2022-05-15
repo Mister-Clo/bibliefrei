@@ -13,8 +13,8 @@
                  <p>{{book['quantite']}}</p>
              </div>
              <div class="col-4 bt-actions">
-                 <button type="button" class="btn btn-primary">Ajouter au Panier</button>
-                 <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>
+                 <button type="button" class="btn btn-primary" @click.prevent="addIt(book['id_livre'])">Ajouter au Panier</button>qty :<input type="number" min="1" class="form-control" v-model="quantite" required/><br>
+                 <button v-if="userRole==0" type="button" class="btn btn-danger" @click.prevent="emit(deleteBook,book['id_livre'])"><i class="bi bi-trash-fill"></i></button>
              </div>
          </div>
      </div>
@@ -27,9 +27,23 @@ export default {
     userRole: int,
     books: {type: Array}
   },
-
+  
+  data(){
+      return{
+          quantite:1
+      }
+  },
   methods: {
-    
+    addIt(id){
+        const book = {
+            idlivre : id,
+            quantite : this.quantite
+        }
+
+        this.$emit('addItem',book)
+
+        this.quantite = 1
+    }
   }
  
 };

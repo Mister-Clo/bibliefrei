@@ -45,7 +45,7 @@ export default {
                body.password = this.password
 
                 const result = await axios.post('/api/register',body)
-                alert(res)
+                alert(result)
                 this.name = ""
                 this.email = ""
                 this.password = ""
@@ -56,7 +56,7 @@ export default {
                   this.errorMessage = result.message
                }
 
-               router.push({ name: '/'}) 
+               this.router.push({ name: 'home'}) 
            } catch (error) {
                console.log(error.response.data)
            }

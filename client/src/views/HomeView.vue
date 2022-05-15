@@ -45,18 +45,28 @@ export default {
              this.password = ""
              this.errorMessage = ""
 
-             if(userInfo.message != null){
+             if(this.userInfo.message != null){
                this.errored = true
-               this.errorMessage = userInfo.message
+               this.errorMessage = this.userInfo.message
              }
 
-             router.push({ name: 'home'}) 
+             //On récupère les livres
+             var books = await axios.get('/api/books', body, 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+
+             //Window.sessionStorage to store data on client side session
+             sessionStorage.setItem('userInfo', JSON.stringify(this.userInfo));
+             sessionStorage.setItem('books',JSON.stringify(books))
+ 
+
+             this.$router.push({ name: 'registrationForm'}) 
            } catch (error) {
              console.log(error.response.data)
            }
            
         }
-    }
+    },
+
 }
 </script>
 
