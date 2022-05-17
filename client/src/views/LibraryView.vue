@@ -1,44 +1,47 @@
 <template>
   <div>
-    <h1 class="fw-bold">BIBIOTHÈQUE EFREI</h1>
+    <router-link to="/panier">Panier</router-link> 
     <div class="container text-center mt-5 mb-5">
-      <Books @addItem="addCart" @deleteBook="deleteBook" :userRole="userInfo.info.role" :items="books"/>
+      <h2 class="mb-2" v-if="userInfo.role == 0"> Connecté en tant que ADMIN</h2>
+      <Biblio @addItem="addCart" @deleteBook="deleteBook" :userRole="userInfo.role" :items="items"/>
     </div>
-
-    <CreateBook v-if="userInfo.info.role == 0" @addBook="createBook"/>
+    <CreateBook v-if="userInfo.role == 0" @addBook="createBook"/>
   </div>
 </template>
 
 <script>
  
-import Books from '@/components/Books.vue'
+import Biblio from '@/components/Books.vue'
 import CreateBook from '@/components/CreateBook.vue'
+import axios from 'axios'
+
 
 export default {
   name: 'LibraryView',
   components : {
-    Books,
+    Biblio,
     CreateBook
   },
 
   data(){
       return{
-        userInfo : null,
-        books : null
+        userInfo : JSON.parse(sessionStorage.getItem('user')),
+        items : JSON.parse(sessionStorage.getItem('books'))
 
       }
   },
 
   methods: {
 
-        async addCart(book){
+        async addCart(livre){
           alert('captured addItem Cart')
 
           try {
-              await axios.post('/api/panier', book, 
+              await axios.post('/api/panier', livre, 
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
 
              alert('Ajouté avec succès')
+             this.getPanier
 
           } catch (error) {
             console.log(error.response.data)
@@ -72,12 +75,24 @@ export default {
             console.log(error.response.data)
           }
           
+        },
+
+        getPanier(){
+            try {
+             const pan = axios.get('/api/panier', 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+             //Window.sessionStorage to store data on client side session
+             sessionStorage.setItem('panier', JSON.stringify(pan.data))
+          } catch (error) {
+            console.log(error.response.data)
+          }
         }
+
   },
 
   mounted() {
-    this.userInfo = JSON.parse(sessionStorage.getItem('userInfo'))
-    this.books = JSON.parse(sessionStorage.getItem('books'))
+    this.userInfo = JSON.parse(sessionStorage.getItem('user'))
+    this.items = JSON.parse(sessionStorage.getItem('books'))
   },
 
   computed: {

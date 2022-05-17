@@ -2,7 +2,7 @@
     <div>
         <form name="myform" action="#" class="box" id="new-command">
       <fieldset>
-        <legend>Ajoutez un livre</legend>
+        <legend class="fw-bold">Ajoutez un livre</legend>
         <input type="text" class="form-control" v-model="titre" placeholder="Titre" required/><br>
         <input type="text" class="form-control" v-model="genre" placeholder="Programmation, BDD..." required/><br>
         <input type="text" class="form-control" v-model="image" placeholder="Lien de l'image" required/><br>

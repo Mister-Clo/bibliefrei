@@ -45,13 +45,13 @@ export default {
                body.password = this.password
 
                 const result = await axios.post('/api/register',body)
-                alert(result)
+                console.log(result.data)
                 this.name = ""
                 this.email = ""
                 this.password = ""
                 this.errorMessage = ""  
 
-                if(result.message != null){
+                if(result.data.message != null){
                   this.errored = true
                   this.errorMessage = result.message
                }

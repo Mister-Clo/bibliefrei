@@ -40,7 +40,8 @@ export default {
              var body = {}
              body.email = this.email
              body.password = this.password
-             this.userInfo = await axios.post('/api/login', body)
+             var results = await axios.post('/api/login', body)
+             this.userInfo = results.data
              this.email = ""
              this.password = ""
              this.errorMessage = ""
@@ -50,16 +51,38 @@ export default {
                this.errorMessage = this.userInfo.message
              }
 
-             //On récupère les livres
-             var books = await axios.get('/api/books', body, 
-             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
-
              //Window.sessionStorage to store data on client side session
-             sessionStorage.setItem('userInfo', JSON.stringify(this.userInfo));
-             sessionStorage.setItem('books',JSON.stringify(books))
- 
+             sessionStorage.setItem('user', JSON.stringify(this.userInfo.info))
+             sessionStorage.setItem('authToken',this.userInfo.accessToken)
+            
+            try {
+              //On récupère les livres
+             const repbooks = await axios.get('/api/books', body, 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+             
+              const books = repbooks.data
+              sessionStorage.setItem('books',JSON.stringify(books))
+            } catch (error) {
+              console.log(error.response.data)
+            }
 
-             this.$router.push({ name: 'registrationForm'}) 
+            try {
+             
+             const pan = await axios.get('/api/panier', 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+             
+             //Window.sessionStorage to store data on client side session
+             sessionStorage.setItem('panier',JSON.stringify(pan.data))
+            }
+            catch (error) {
+              console.log(error.response.data)
+            }
+             
+             console.log(JSON.parse(sessionStorage.getItem('user')))
+             console.log(JSON.parse(sessionStorage.getItem('panier')))
+
+
+             this.$router.push({ name: 'library'}) 
            } catch (error) {
              console.log(error.response.data)
            }

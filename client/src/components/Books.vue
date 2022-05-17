@@ -1,31 +1,28 @@
 <template>
      <div class="container">
-         <div v-for="book in books" :key="book" class="row align-items-start row-cols-3 row-cols-lg-4 g-2 g-lg-4">
-             <div class="col-4">
-                 <h3>{{book['titre']}}</h3>
-                 <img src="{{book['image']}}" alt="">
-             </div>
-             <div class="col-2">
-                {{book['genre']}}
-             </div>
-             <div class="col-2">
-                 <h4>Exemplaires Disponibles</h4> 
-                 <p>{{book['quantite']}}</p>
-             </div>
-             <div class="col-4 bt-actions">
-                 <button type="button" class="btn btn-primary" @click.prevent="addIt(book['id_livre'])">Ajouter au Panier</button>qty :<input type="number" min="1" class="form-control" v-model="quantite" required/><br>
-                 <button v-if="userRole==0" type="button" class="btn btn-danger" @click.prevent="emit(deleteBook,book['id_livre'])"><i class="bi bi-trash-fill"></i></button>
-             </div>
-         </div>
+
+         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4">
+            <div v-for="item in items" :key="item" class="card p-0 col m-3" style="width: 18rem;">
+                 <img :src="item.image" width="100%" class="card-img-top" alt="Un livre">
+                <div class="card-body">
+                    <h5 class="card-title">{{item['titre']}}</h5>
+                    <p class="card-text">{{item['genre']}}</p>
+                    <p> Examplaires : {{item['quantite']}}</p>
+                    <button type="button" class="btn btn-primary" @click.prevent="addIt(item['id_livre'])">Ajouter au Panier</button>
+                    <input id="addQty" type="number" min="1" max="10" placeholder="qty" class="form-control ms-2" v-model="quantite" required/>
+                   <button v-if="userRole==0" type="button" class="btn btn-danger m-2" @click.prevent="emit(deleteBook,item['id_livre'])"><i class="bi bi-trash-fill"></i></button>
+                </div>
+            </div>
+        </div>
      </div>
 </template>
 
 <script>
 export default {
-  name: "Books",
+  name: 'BibItem',
   props: {
-    userRole: int,
-    books: {type: Array}
+    userRole: Number,
+    items: {type: Array}
   },
   
   data(){
@@ -35,12 +32,12 @@ export default {
   },
   methods: {
     addIt(id){
-        const book = {
-            idlivre : id,
+        const livre = {
+            idLivre : id,
             quantite : this.quantite
         }
 
-        this.$emit('addItem',book)
+        this.$emit('addItem',livre)
 
         this.quantite = 1
     }
@@ -50,9 +47,19 @@ export default {
 </script>
 
 <style scoped>
+    .card-img-top{
+        width: 100% !important;
+    }
+    .row{
+        flex-wrap: wrap;
+    }
     .bt-actions{
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
+    }
+    #addQty{
+        display: inline-block;
+        width: 5em;
     }
 
     .i{

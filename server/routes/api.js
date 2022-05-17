@@ -181,7 +181,7 @@ router.post('/panier',authenticateToken, async(req,res)=>{
                     
                     //Si le livre est déjà dans le panier, on modifie sa quantité
                     if(items.length != 0){
-                        await sequelize.query("UPDATE `panier_item` SET `quantity` = '"+ items[0].quantity + quantite +"' WHERE `id_item` ='"+items[0].id_item+"'")
+                        await sequelize.query("UPDATE `panier_item` SET `quantity` = quantity+'"+ quantite +"' WHERE `id_item` ='"+items[0].id_item+"'")
                         .then(([success,metadata])=>{
                           res.status(200).json({message:"Ajouté avec succès", success:success})
                         }) 
@@ -208,7 +208,7 @@ router.post('/panier',authenticateToken, async(req,res)=>{
 
 
 /** Delete a Book from the Cart */
-router.delete('/panier/', authenticateToken, async(req,res)=>{
+router.delete('/panier', authenticateToken, async(req,res)=>{
   const id_livre = parseInt(req.body.idLivre)
 
   try {
@@ -220,7 +220,34 @@ router.delete('/panier/', authenticateToken, async(req,res)=>{
   } catch (error) {
     res.status(500).json({message:"rendered error"})
   }
+})
 
+/** Validate Cart */
+router.delete('/validate', authenticateToken, async(req,res)=>{
+
+  try {
+    await sequelize.query("SELECT * FROM panier WHERE user_id ='"+req.user.id+"'")
+          .then(async([results,metadata])=>{
+
+            await sequelize.query("SELECT livre.id_livre AS id_livre,livre.titre AS titre,livre.genre AS genre,livre.image AS image,panier.id_panier AS id_panier,quantity,user_id,date_creation"+ 
+            " FROM " +
+            "(panier_item JOIN panier ON panier_item.id_panier=panier.id_panier) JOIN livre ON livre.id_livre = panier_item.id_livre WHERE user_id = '"+req.user.id+"'")
+            .then(async ([items,metadata])=>{
+              
+              //Update the quantities in the database
+              items.forEach(async (item) => {
+                await sequelize.query("UPDATE `livre` SET `quantite` = quantite-'"+item.quantity +"' WHERE `id_livre` ='"+item.id_livre+"'")
+              });
+              await sequelize.query("DELETE FROM `panier_item` WHERE `id_panier` ='"+results[0].id_panier+"'")
+                    .then(([results,metadata])=>{
+                       res.status(200).json({message:"Validé avec Succès"})
+                    })
+            })
+
+          })
+  } catch (error) {
+    res.status(500).json({message:"rendered error"})
+  }
 })
 
 
@@ -289,8 +316,9 @@ router.delete('/books', authenticateToken, async(req,res)=>{
 
 /** Middleware to authenticate user with JWT and enable access to resources */
 function authenticateToken(req,res,next){
-  const authHeader = req.headers['authorization']
-  const token =  authHeader && authHeader.split(' ')[1]
+  //const authHeader = req.headers['authorization']
+  //const token =  authHeader && authHeader.split(' ')[1]
+  token = req.session.user.accessToken
   if (token == null) return res.sendStatus(401) //UnAuthenticated
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,user)=>{
