@@ -3,6 +3,12 @@
     <router-link to="/panier">Panier</router-link> 
     <div class="container text-center mt-5 mb-5">
       <h2 class="mb-2" v-if="userInfo.role == 0"> Connecté en tant que ADMIN</h2>
+      <div class="row justify-content-center">
+        <div id="searchBar" class="col-3 col-md-3 col-lg-3 align-self-end input-group my-2">
+          <input @input="searchBook" type="text" size="15" placeholder="Rechercher un livre" class="form-control" v-model="search" required/>
+          <span class="input-group-text" ><i class="bi bi-search"></i></span>
+        </div>
+      </div>
       <Biblio @addItem="addCart" @deleteBook="deleteBook" :userRole="userInfo.role" :items="items"/>
     </div>
     <CreateBook v-if="userInfo.role == 0" @addBook="createBook"/>
@@ -26,7 +32,9 @@ export default {
   data(){
       return{
         userInfo : JSON.parse(sessionStorage.getItem('user')),
-        items : JSON.parse(sessionStorage.getItem('books'))
+        items : JSON.parse(sessionStorage.getItem('books')),
+        search : "",
+        originalItems : JSON.parse(sessionStorage.getItem('books'))
 
       }
   },
@@ -86,6 +94,16 @@ export default {
           } catch (error) {
             console.log(error.response.data)
           }
+        },
+
+        searchBook(){
+          if(this.search==""){
+            this.items = this.originalItems
+          }
+          else{
+            const pattern = new RegExp(this.search,"i")
+            this.items = this.originalItems.filter(item => !item.titre.search(pattern) )
+          }
         }
 
   },
@@ -105,5 +123,7 @@ export default {
 </script>
 
 <style scoped>
- 
+ #searchBar{
+   width: 15rem;
+ }
 </style>

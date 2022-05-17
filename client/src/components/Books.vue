@@ -1,6 +1,5 @@
 <template>
      <div class="container">
-
          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4">
             <div v-for="item in items" :key="item" class="card p-0 col m-3" style="width: 18rem;">
                  <img :src="item.image" width="100%" class="card-img-top" alt="Un livre">
@@ -27,7 +26,8 @@ export default {
   
   data(){
       return{
-          quantite:1
+          quantite:1,
+          search: ""
       }
   },
   methods: {
