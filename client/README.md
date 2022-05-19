@@ -1,24 +1,22 @@
-# client
-
-## Project setup
+# Follow these steps in order to run Project
+## client
 ```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
+---> Place yourself with the cmd in client folder
+---> Run command "npm install" to install node_modules
+---> Then run command "npm run build" to deploy the client for production with dist folder
 ```
 
-### Compiles and minifies for production
+## server
 ```
-npm run build
-```
+---> Place yourself with the cmd in server folder
+---> Run command "npm install" to install node_modules
+---> Then start the server with the command "npm run start"
 
-### Lints and fixes files
-```
-npm run lint
-```
+ ---> Open your favorite browser at the url localhost:3000
 
+ ---> Enjoy ;)
+```
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+  
