@@ -62,8 +62,17 @@ export default {
           try {
              await axios.post('/api/books', livre, 
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
-
+             
              alert("créé avec succès")
+
+             const repbooks = await axios.get('/api/books', 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+             
+              const books = repbooks.data
+              this.originalItems = books
+              this.items = this.originalItems
+              sessionStorage.setItem('books',JSON.stringify(books))
+
           } catch (error) {
             console.log(error.response.data)
           }
@@ -79,6 +88,13 @@ export default {
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
 
           alert('Supprimé avec Succès')
+          const repbooks = await axios.get('/api/books', 
+             {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
+             
+              const books = repbooks.data
+              this.originalItems = books
+              this.items = this.originalItems
+              sessionStorage.setItem('books',JSON.stringify(books))
           } catch (error) {
             console.log(error.response.data)
           }
