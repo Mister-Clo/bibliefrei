@@ -176,24 +176,29 @@ router.post('/panier',authenticateToken, async(req,res)=>{
 
           //Le panier existe
           else{
-            await sequelize.query("SELECT * FROM panier_item WHERE id_livre ='"+id_livre+"'")
+            await sequelize.query("SELECT * FROM panier_item WHERE id_panier ='"+results[0].id_panier+"' AND id_livre='"+id_livre+"'")
                   .then(async ([items,metadata])=>{
-                    
-                    //Si le livre est déjà dans le panier, on modifie sa quantité
-                    if(items.length != 0){
-                        await sequelize.query("UPDATE `panier_item` SET `quantity` = quantity+'"+ quantite +"' WHERE `id_item` ='"+items[0].id_item+"'")
-                        .then(([success,metadata])=>{
-                          res.status(200).json({message:"Ajouté avec succès", success:success})
-                        }) 
-                    }
-
                     //Si le livre n'est pas encore dans le panier on le rajoute
-                    else{
+                    if(items.length == 0){
                       await sequelize.query("INSERT INTO `panier_item` (`id_panier`, `id_livre`, `quantity`) VALUES ('"+results[0].id_panier+"', '"+id_livre+"', '"+quantite+"')")
                             .then(([results,metadata])=>{
                               res.status(200).json({message:"Ajouté avec succès", success:results})
                             })
                     }
+
+                          //Si le livre est déjà dans le panier, on modifie sa quantité
+                    else{
+                          await sequelize.query("UPDATE `panier_item` SET `quantity` = quantity+'"+ quantite +"' WHERE `id_item` ='"+items[0].id_item+"'")
+                          .then(([success,metadata])=>{
+                            res.status(200).json({message:"Ajouté avec succès", success:success})
+                          })
+
+                    }
+                    
+              
+                   
+                    
+                    
                   })
 
             

@@ -7,9 +7,9 @@
                     <h5 class="card-title">{{item['titre']}}</h5>
                     <p class="card-text">{{item['genre']}}</p>
                     <p> Examplaires : {{item['quantite']}}</p>
-                    <button type="button" class="btn btn-primary" @click.prevent="addIt(item['id_livre'])">Ajouter au Panier</button>
+                    <button type="button" class="btn btn-primary" @click.prevent="addIt(parseInt(item['id_livre']))">Ajouter au Panier</button>
                     <input id="addQty" type="number" min="1" max="10" placeholder="qty" class="form-control ms-2" v-model="quantite" required/>
-                   <button v-if="userRole==0" type="button" class="btn btn-danger m-2" @click.prevent="emit(deleteBook,item['id_livre'])"><i class="bi bi-trash-fill"></i></button>
+                   <button v-if="userRole==0" type="button" class="btn btn-danger m-2" @click.prevent="delBook(parseInt(item['id_livre']))"><i class="bi bi-trash-fill"></i></button>
                 </div>
             </div>
         </div>
@@ -40,6 +40,11 @@ export default {
         this.$emit('addItem',livre)
 
         this.quantite = 1
+    },
+
+    delBook(id){
+        alert("supprimer "+id)
+        this.$emit('deleteBook', id)
     }
   }
  

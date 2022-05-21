@@ -49,7 +49,7 @@ export default {
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
 
              alert('Ajouté avec succès')
-             this.getPanier
+             this.getPanier()
 
           } catch (error) {
             console.log(error.response.data)
@@ -81,10 +81,12 @@ export default {
         },
 
         async deleteBook(id){
-          alert('captured delete')
+          alert('captured delete'+id)
 
           try {
-            await axios.delete('/api/books', { idLivre : id }, 
+            body = {}
+            body.idLivre = id
+            await axios.delete('/api/books', body, 
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
 
           alert('Supprimé avec Succès')
@@ -101,12 +103,13 @@ export default {
           
         },
 
-        getPanier(){
+        async getPanier(){
             try {
-             const pan = axios.get('/api/panier', 
+             const pan = await axios.get('/api/panier', 
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
              //Window.sessionStorage to store data on client side session
              sessionStorage.setItem('panier', JSON.stringify(pan.data))
+             console.log(pan.data)
           } catch (error) {
             console.log(error.response.data)
           }

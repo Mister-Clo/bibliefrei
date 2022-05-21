@@ -13,7 +13,7 @@
                     <p class="card-text">{{item['genre']}}</p>
                     <p> Quantité : {{item['quantity']}}</p>
                     <div class="col-5 bt-actions">
-                 <button type="button" class="btn btn-danger m-2" @click.prevent="deleteItem(item['id_livre'])"><i class="bi bi-trash-fill"></i></button>
+                 <button type="button" class="btn btn-danger m-2" @click.prevent="deleteItem(parseInt(item['id_livre']))"><i class="bi bi-trash-fill"></i></button>
              </div>
                 </div>
             </div>
@@ -57,7 +57,8 @@ export default {
         
         async deleteItem(id){
             try {
-            await axios.delete('/api/panier', { idLivre : id }, 
+              alert(id)
+            await axios.delete('/api/panier', { "idLivre" : id }, 
              {headers: {Authorization: 'Bearer ' + this.userInfo.accessToken}})
 
           alert('Supprimé avec Succès')
